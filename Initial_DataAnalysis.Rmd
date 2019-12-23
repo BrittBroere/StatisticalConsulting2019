@@ -1,0 +1,460 @@
+---
+title: "Initial_DataAnalysis"
+output: html_document
+---
+
+# Loading packages and reading the data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE, cache = TRUE)
+library(knitr)
+library(readxl)
+library(tidyverse)
+
+# Loading the data
+data <- read.csv('analysisTable_zScore_EQ.txt')
+```
+
+# Inspecting the data
+
+```{r}
+head(data)
+summary(data)
+```
+
+No cases of Autism Specturm Disorder. However, max score of LSAS\_overall is 83 which indicates Social Anxiety. 
+
+```{r}
+unique(data[data$LSAS_overall > 60, 'ID']) # Persons with Social Anxiety 
+```
+
+
+# Participants
+
+```{r}
+unique_subj <- unlist(unique(data[1]), use.names = FALSE)
+paste0('There are ', length(unique_subj), ' subjects.')
+
+cnt_obs_subj <- numeric()
+for (i in 1:length(unique_subj)) {
+  cnt_obs_subj[i] <- sum(data[1] == unique_subj[i])
+}
+unique(cnt_obs_subj) # Every subject has 7725 measures
+```
+
+# Trials
+
+```{r}
+unique_trial <- sort(unlist(unique(data[2]), use.names = FALSE))
+paste0('There are ', length(unique_trial), ' trials.') 
+
+cnt_trials <- numeric()
+for (i in 1:length(unique_trial)) {
+  cnt_trials[i] <- sum(data[2] == unique_trial[i])
+}
+unique(cnt_trials) # There are 5025, 5100, 4950, 4875 meaures for trials
+
+```
+
+Every participant misses one trial.
+
+
+# Means
+
+```{r, include= FALSE}
+mean(data$Age)
+mean(data$AQ_overall)
+mean(data$LSAS_overall)
+mean(data$EQ_overall)
+mean(data$baselineCorrected_EMG_Cor_zScore, na.rm = TRUE) # With NA's removed
+mean(data$baselineCorrected_EMG_Zyg_zScore, na.rm = TRUE) # With NA's removed
+mean(data$baselineCorrected_SC_zScore, na.rm = TRUE) # With NA's removed
+mean(data$baselineCorrected_SKT_zScore, na.rm = TRUE) # With NA's removed
+mean(data$baselineCorrected_DIA_zScore, na.rm = TRUE) # With NA's removed
+
+```
+
+
+```{r}
+# Group by Slice
+data_tib <- as_tibble(data)
+
+by_Slice <- data_tib %>% group_by(Slice)
+
+# Means of signals per slice
+sum_slice <- by_Slice %>% summarise(Mean_Cor = mean(baselineCorrected_EMG_Cor_zScore, na.rm = TRUE), Mean_Zyg = mean(baselineCorrected_EMG_Zyg_zScore, na.rm = TRUE), Mean_SC = mean(baselineCorrected_SC_zScore, na.rm = TRUE), Mean_SKT = mean(baselineCorrected_SKT_zScore, na.rm = TRUE), Mean_DIA = mean(baselineCorrected_DIA_zScore, na.rm = TRUE))
+
+sum_slice
+
+```
+
+
+```{r}
+# Group by Slice and Labeled emotion
+data_tib <- as_tibble(data)
+
+by_SliceEMO <- data_tib %>% group_by(Slice, label_string)
+
+# Means of signals per slice per labeled emotion
+sum_sliceEMO <- by_SliceEMO %>% summarise(Mean_Cor = mean(baselineCorrected_EMG_Cor_zScore, na.rm = TRUE), Mean_Zyg = mean(baselineCorrected_EMG_Zyg_zScore, na.rm = TRUE), Mean_SC = mean(baselineCorrected_SC_zScore, na.rm = TRUE), Mean_SKT = mean(baselineCorrected_SKT_zScore, na.rm = TRUE), Mean_DIA = mean(baselineCorrected_DIA_zScore, na.rm = TRUE))
+
+sum_sliceEMO
+
+```
+
+
+
+```{r}
+# Group by Slice and ID
+by_SliceID <- data_tib %>% group_by(Slice, ID)
+
+# Means of signal per ID per slice
+sum_sliceID <- by_SliceID %>% summarise(Mean_Cor = mean(baselineCorrected_EMG_Cor_zScore, na.rm = TRUE), Mean_Zyg = mean(baselineCorrected_EMG_Zyg_zScore, na.rm = TRUE), Mean_SC = mean(baselineCorrected_SC_zScore, na.rm = TRUE), Mean_SKT = mean(baselineCorrected_SKT_zScore, na.rm = TRUE), Mean_DIA = mean(baselineCorrected_DIA_zScore, na.rm = TRUE))
+
+sum_sliceID
+
+```
+
+
+# Descriptives and plots
+
+```{r, include=FALSE}
+# Age
+boxplot(data$Age)
+
+# Gender
+plot(data$Gender)
+
+# Handedness
+plot(data$Handedness)
+unique(data[c(data$Handedness == 'NaN'), 'ID']) # ID with missing Handedness
+
+# mean EMG Corrugator
+xstim <- c(1:40)
+xblank <- c(41:75)
+mean_cor_stim <- sum_slice$Mean_Cor[1:40]
+mean_cor_blank <- sum_slice$Mean_Cor[41:75]
+reg_stim <- lm(mean_cor_stim ~ xstim)
+reg_blank <- lm(mean_cor_blank ~ xblank)
+
+plot(sum_slice$Mean_Cor, type = 'l', xlab = 'Slices', ylab = 'Mean EMG_Cor')
+abline(v = 40, col = 'red')
+lines(reg_stim$fitted.values, col = 'blue')
+lines(x = c(40:74), reg_blank$fitted.values, col = 'green')
+
+# mean EMG Zygomaticus
+xstim <- c(1:40)
+xblank <- c(41:75)
+mean_zyg_stim <- sum_slice$Mean_Zyg[1:40]
+mean_zyg_blank <- sum_slice$Mean_Zyg[41:75]
+reg_stim <- lm(mean_zyg_stim ~ xstim)
+reg_blank <- lm(mean_zyg_blank ~ xblank)
+
+plot(sum_slice$Mean_Zyg, type = 'l', xlab = 'Slices', ylab = 'Mean EMG_Zyg')
+abline(v = 40, col = 'red')
+lines(reg_stim$fitted.values, col = 'blue')
+lines(x = c(40:74), reg_blank$fitted.values, col = 'green')
+
+# mean Skin Conductance
+xstim <- c(1:40)
+xblank <- c(41:75)
+mean_sc_stim <- sum_slice$Mean_SC[1:40]
+mean_sc_blank <- sum_slice$Mean_SC[41:75]
+reg_stim <- lm(mean_sc_stim ~ xstim)
+reg_blank <- lm(mean_sc_blank ~ xblank)
+
+plot(sum_slice$Mean_SC, type = 'l', xlab = 'Slices', ylab = 'Mean SC')
+abline(v = 40, col = 'red')
+lines(reg_stim$fitted.values, col = 'blue')
+lines(x = c(40:74), reg_blank$fitted.values, col = 'green')
+
+# mean Skin Temperature
+xstim <- c(1:40)
+xblank <- c(41:75)
+mean_skt_stim <- sum_slice$Mean_SKT[1:40]
+mean_skt_blank <- sum_slice$Mean_SKT[41:75]
+reg_stim <- lm(mean_skt_stim ~ xstim)
+reg_blank <- lm(mean_skt_blank ~ xblank)
+
+plot(sum_slice$Mean_SKT, type = 'l', xlab = 'Slices', ylab = 'Mean SKT')
+abline(v = 40, col = 'red')
+lines(reg_stim$fitted.values, col = 'blue')
+lines(x = c(40:74), reg_blank$fitted.values, col = 'green')
+
+# mean Pupil Diameter
+xstim <- c(1:40)
+xblank <- c(41:75)
+mean_dia_stim <- sum_slice$Mean_DIA[1:40]
+mean_dia_blank <- sum_slice$Mean_DIA[41:75]
+reg_stim <- lm(mean_dia_stim ~ xstim)
+reg_blank <- lm(mean_dia_blank ~ xblank)
+
+plot(sum_slice$Mean_DIA, type = 'l', xlab = 'Slices', ylab = 'Mean DIA')
+abline(v = 40, col = 'red')
+lines(reg_stim$fitted.values, col = 'blue')
+lines(x = c(40:74), reg_blank$fitted.values, col = 'green')
+```
+
+
+
+
+```{r}
+# Plot mean signal score per emotion
+
+# EMG Cor
+plot(sum_sliceEMO[sum_sliceEMO$label_string == 'angry', 'Mean_Cor'][[1]], type = 'l', xlab = 'Slices', ylab = 'Mean EMG_Cor', ylim = range(c(-0.12, 0.12)))
+abline(v = 40, col = 'red')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'sad', 'Mean_Cor'][[1]], col = 'blue')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'happy', 'Mean_Cor'][[1]], col = 'green')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'neutral', 'Mean_Cor'][[1]], col = 'orange')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'scared', 'Mean_Cor'][[1]], col = 'purple')
+legend('topright',inset = 0.02,legend = c('angry', 'sad', 'happy', 'neutral', 'scared'),col = c('black', 'blue', 'green', 'orange', 'purple'), cex = 0.60, lty = 1)
+
+# EMG Zyg
+plot(sum_sliceEMO[sum_sliceEMO$label_string == 'angry', 'Mean_Zyg'][[1]], type = 'l', xlab = 'Slices', ylab = 'Mean EMG_Zyg', ylim = range(c(-0.1, 0.15)))
+abline(v = 40, col = 'red')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'sad', 'Mean_Zyg'][[1]], col = 'blue')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'happy', 'Mean_Zyg'][[1]], col = 'green')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'neutral', 'Mean_Zyg'][[1]], col = 'orange')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'scared', 'Mean_Zyg'][[1]], col = 'purple')
+legend('topleft',inset = 0.02,legend = c('angry', 'sad', 'happy', 'neutral', 'scared'),col = c('black', 'blue', 'green', 'orange', 'purple'), cex = 0.50, lty = 1)
+
+# SC
+plot(sum_sliceEMO[sum_sliceEMO$label_string == 'angry', 'Mean_SC'][[1]], type = 'l', xlab = 'Slices', ylab = 'Mean SC', ylim = range(c(-0.15, 0.15)))
+abline(v = 40, col = 'red')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'sad', 'Mean_SC'][[1]], col = 'blue')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'happy', 'Mean_SC'][[1]], col = 'green')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'neutral', 'Mean_SC'][[1]], col = 'orange')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'scared', 'Mean_SC'][[1]], col = 'purple')
+legend('topright',inset = 0.02,legend = c('angry', 'sad', 'happy', 'neutral', 'scared'),col = c('black', 'blue', 'green', 'orange', 'purple'), cex = 0.60, lty = 1)
+
+# SKT
+plot(sum_sliceEMO[sum_sliceEMO$label_string == 'angry', 'Mean_SKT'][[1]], type = 'l', xlab = 'Slices', ylab = 'Mean SKT', ylim = range(c(-0.15, 0.15)))
+abline(v = 40, col = 'red')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'sad', 'Mean_SKT'][[1]], col = 'blue')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'happy', 'Mean_SKT'][[1]], col = 'green')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'neutral', 'Mean_SKT'][[1]], col = 'orange')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'scared', 'Mean_SKT'][[1]], col = 'purple')
+legend('topleft',inset = 0.02,legend = c('angry', 'sad', 'happy', 'neutral', 'scared'),col = c('black', 'blue', 'green', 'orange', 'purple'), cex = 0.60, lty = 1)
+
+# DIA
+plot(sum_sliceEMO[sum_sliceEMO$label_string == 'angry', 'Mean_DIA'][[1]], type = 'l', xlab = 'Slices', ylab = 'Mean DIA', ylim = range(c(-0.3, 0.3)))
+abline(v = 40, col = 'red')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'sad', 'Mean_DIA'][[1]], col = 'blue')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'happy', 'Mean_DIA'][[1]], col = 'green')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'neutral', 'Mean_DIA'][[1]], col = 'orange')
+lines(sum_sliceEMO[sum_sliceEMO$label_string == 'scared', 'Mean_DIA'][[1]], col = 'purple')
+legend('topright',inset = 0.02,legend = c('angry', 'sad', 'happy', 'neutral', 'scared'),col = c('black', 'blue', 'green', 'orange', 'purple'), cex = 0.60, lty = 1)
+
+```
+
+
+# NA and NaN
+
+If a variable is not present in this list, then it has zero NA or NaN values. 
+```{r, include=FALSE}
+
+sum(is.na(data$baselineCorrected_EMG_Cor_zScore))
+sum(is.na(data$baselineCorrected_EMG_Zyg_zScore))
+sum(is.na(data$baselineCorrected_SC_zScore))
+sum(is.na(data$baselineCorrected_SKT_zScore))
+sum(is.na(data$baselineCorrected_DIA_zScore))
+# ID's of participants where handedness is not known
+unique(data[data$Handedness == 'NaN', 1])
+```
+
+
+
+```{r}
+total_data <- 5 * nrow(data)
+total_missing <- sum(is.na(data$baselineCorrected_EMG_Cor_zScore)) +
+  sum(is.na(data$baselineCorrected_EMG_Zyg_zScore)) + 
+  sum(is.na(data$baselineCorrected_SC_zScore)) + 
+  sum(is.na(data$baselineCorrected_SKT_zScore)) + 
+  sum(is.na(data$baselineCorrected_DIA_zScore))
+
+perc_EMG_Cor <- round((sum(is.na(data$baselineCorrected_EMG_Cor_zScore))/total_missing) * 100, 3)
+perc_EMG_Zyg <- round((sum(is.na(data$baselineCorrected_EMG_Zyg_zScore))/total_missing) * 100, 3)
+perc_SC <- round((sum(is.na(data$baselineCorrected_SC_zScore))/total_missing) * 100, 3)
+perc_SKT <- round((sum(is.na(data$baselineCorrected_SKT_zScore))/total_missing) * 100, 3)
+perc_DIA <- round((sum(is.na(data$baselineCorrected_DIA_zScore))/total_missing) * 100, 3)
+
+
+# Of all data points of the 5 physio measures (5*525300), this percentage is missing
+perc_missing_total <- round((total_missing/total_data) * 100, 3)
+
+percentage_missing <- matrix(c(perc_EMG_Cor, perc_EMG_Zyg, perc_SC, perc_SKT, perc_DIA, perc_missing_total, sum(is.na(data$baselineCorrected_EMG_Cor_zScore)), sum(is.na(data$baselineCorrected_EMG_Zyg_zScore)), sum(is.na(data$baselineCorrected_SC_zScore)), sum(is.na(data$baselineCorrected_SKT_zScore)), sum(is.na(data$baselineCorrected_DIA_zScore)), total_missing), ncol = 6, byrow = TRUE)
+
+colnames(percentage_missing) <- c('EMG_Cor', 'EMG_Zyg', 'SC', 'SKT', 'DIA', 'Total')
+rownames(percentage_missing) <- c('Percentage:', 'Frequency:')
+percentage_missing <- as.table(percentage_missing)
+
+percentage_missing
+```
+
+
+```{r}
+# Group by Trial and ID
+data_tib <- as_tibble(data)
+
+by_TrialID_EMG_cor <- data_tib %>% group_by(Trial, ID)
+sum_cor <- by_TrialID_EMG_cor %>% summarise(Na=sum(is.na(baselineCorrected_EMG_Cor_zScore)))
+
+by_TrialID_EMG_zyg <- data_tib %>% group_by(Trial, ID)
+sum_zyg <- by_TrialID_EMG_zyg %>% summarise(Na=sum(is.na(baselineCorrected_EMG_Zyg_zScore)))
+
+by_TrialID_SC <- data_tib %>% group_by(Trial, ID)
+sum_SC <- by_TrialID_SC %>% summarise(Na = sum(is.na(baselineCorrected_SC_zScore)))
+
+by_TrialID_SKT <- data_tib %>% group_by(Trial, ID)
+sum_SKT <- by_TrialID_SKT %>% summarise(Na = sum(is.na(baselineCorrected_SKT_zScore)))
+
+by_TrialID_DIA <- data_tib %>% group_by(Trial, ID)
+sum_DIA <- by_TrialID_DIA %>% summarise(Na = sum(is.na(baselineCorrected_DIA_zScore)))
+
+sum_DIA[sum_DIA$ID==4 & sum_DIA$Na == 0,] # only 9 rows with 0 missing for subject 4
+sum_cor[sum_cor$ID==56 & sum_cor$Na == 0,] # all missings for subject 56
+```
+
+# Conditional Mean Imputation
+
+```{r}
+# Copy the dataframe
+dat <- data
+
+for(i in 1:525300){
+  if(is.na(dat[i, 'baselineCorrected_EMG_Cor_zScore'])){
+    dat[i, 'baselineCorrected_EMG_Cor_zScore'] = as.numeric(sum_sliceID[sum_sliceID$ID == dat[i, 'ID'] & sum_sliceID$Slice == dat[i, 'Slice'],'Mean_Cor'])
+  }
+}
+
+for(i in 1:525300){
+  if(is.na(dat[i, 'baselineCorrected_EMG_Zyg_zScore'])){
+    dat[i, 'baselineCorrected_EMG_Zyg_zScore'] = as.numeric(sum_sliceID[sum_sliceID$ID == dat[i, 'ID'] & sum_sliceID$Slice == dat[i, 'Slice'],'Mean_Zyg'])
+  }
+}
+
+for(i in 1:525300){
+  if(is.na(dat[i, 'baselineCorrected_SC_zScore'])){
+    dat[i, 'baselineCorrected_SC_zScore'] = as.numeric(sum_sliceID[sum_sliceID$ID == dat[i, 'ID'] & sum_sliceID$Slice == dat[i, 'Slice'],'Mean_SC'])
+  }
+}
+
+for(i in 1:525300){
+  if(is.na(dat[i, 'baselineCorrected_SKT_zScore'])){
+    dat[i, 'baselineCorrected_SKT_zScore'] = as.numeric(sum_sliceID[sum_sliceID$ID == dat[i, 'ID'] & sum_sliceID$Slice == dat[i, 'Slice'],'Mean_SKT'])
+  }
+}
+
+for(i in 1:525300){
+  if(is.na(dat[i, 'baselineCorrected_DIA_zScore'])){
+    dat[i, 'baselineCorrected_DIA_zScore'] = as.numeric(sum_sliceID[sum_sliceID$ID == dat[i, 'ID'] & sum_sliceID$Slice == dat[i, 'Slice'],'Mean_DIA'])
+  }
+}
+
+
+#save(dat,file="dat.Rda")
+#load("dat.Rda")
+
+```
+
+Some participants don't have any values for a specific trial. For example, participant 56 doesn't have any EMG cor values. 
+
+
+# Making a dataframe with summarized measures
+
+```{r}
+
+mat <- matrix(data = NA, nrow = 68*103, ncol = 22)
+colnames(mat) <- c('ID', 'Trial', 
+                   'Int_stim_Cor', 'Sl_stim_Cor', 'Int_bl_Cor', 'Sl_bl_Cor',
+                   'Int_stim_Zyg', 'Sl_stim_Zyg', 'Int_bl_Zyg', 'Sl_bl_Zyg',
+                   'Int_stim_SC', 'Sl_stim_SC', 'Int_bl_SC','Sl_bl_SC',
+                   'Int_stim_SKT', 'Sl_stim_SKT', 'Int_bl_SKT', 'Sl_bl_SKT', 
+                   'Int_stim_DIA', 'Sl_stim_DIA', 'Int_bl_DIA', 'Sl_bl_DIA')
+
+participants <- unique_subj
+
+mat[, 'ID'] = rep(participants, each = 103)
+
+for(i in participants){
+  trials <- unique(dat[dat$ID == i, 'Trial'])
+  mat[mat[, 'ID'] == i, 'Trial'] = trials
+}
+
+signal <- c('baselineCorrected_EMG_Cor_zScore',
+            'baselineCorrected_EMG_Zyg_zScore',
+            'baselineCorrected_SC_zScore',
+            'baselineCorrected_SKT_zScore',
+            'baselineCorrected_DIA_zScore')
+
+xstim <- c(1:40)
+xblank <- c(41:75)
+for(r in 1:7004){
+ mat[r, 'Int_stim_Cor'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == mat[r,'Trial'],signal[1]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_stim_Cor'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[1]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_bl_Cor'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[1]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_bl_Cor'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[1]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_stim_Zyg'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == mat[r, 'Trial'],signal[2]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_stim_Zyg'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[2]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_bl_Zyg'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[2]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_bl_Zyg'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[2]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_stim_SC'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[3]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_stim_SC'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[3]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_bl_SC'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[3]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_bl_SC'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[3]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_stim_SKT'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == mat[r, 'Trial'],signal[4]][xstim] ~ xstim, na.action = na.fail), error=function(err){NA})[[1]][[1]]
+  
+  mat[r, 'Sl_stim_SKT'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[4]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_bl_SKT'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[4]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_bl_SKT'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[4]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_stim_DIA'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == mat[r, 'Trial'],signal[5]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_stim_DIA'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[5]][xstim] ~ xstim, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+  
+  mat[r, 'Int_bl_DIA'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[5]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[1]]
+  
+  mat[r, 'Sl_bl_DIA'] = tryCatch(lm(dat[dat$ID == mat[r, 'ID'] & dat$Trial == 
+mat[r, 'Trial'],signal[5]][xblank] ~ xblank, na.action = na.fail), error=function(err){list(list(NA, NA))})[[1]][[2]]
+}
+
+# To save the matrix
+library(MASS)
+write.matrix(mat, file = "mat_imputed", sep = " ")
+mat_read <- read.table("mat_imputed", header = TRUE)
+
+
+```
+
+For every participant, we calculated the slope and intercept for that person per trial per physiological signal. This way, the multilevel model no longer has slices as a level but only participants and trials. This is necessary because the outcome variable (emotion) needs to be on the same level in a multilevel multinomial model. However, in the initial set up, slices were the lowest level but the outcome variable emotion label was on the level of trials. So the data is sort of downsized and now every trial has 20 values (every signal has a slope and intercept for the stimulus window and a slope and intercept for the blank window) capturing the data in the slices. 
+
