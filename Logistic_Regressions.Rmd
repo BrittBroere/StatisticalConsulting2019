@@ -1,0 +1,2978 @@
+---
+title: "Logistic Regression"
+output: html_document
+---
+
+```{r}
+library(MASS)
+library(knitr)
+library(readxl)
+library(tidyverse)
+
+# Loading the data
+data <- read.csv('analysisTable_zScore_EQ.txt')
+load("dat.Rda")
+mat_read <- read.table("mat_imputed", header = TRUE)
+```
+
+
+# Extending the matrix: labeled 
+
+```{r}
+dat_uniq_label <- unique(dat[, c('ID', 'Trial', 'label_string')])
+mat_label <- merge(mat_read, dat_uniq_label, by = c('ID', 'Trial'), sort=FALSE)
+dat_uniq_labl1 <- unique(dat[, c('ID', 'Trial', 'EmoCat_string')])
+mat_label <- merge(mat_label, dat_uniq_labl1, by = c('ID', 'Trial'), sort=FALSE)
+dat_uniq_vas <- unique(dat[, c('ID', 'Trial', 'VASValue')])
+mat_label <- merge(mat_label, dat_uniq_vas, by = c('ID', 'Trial'), sort=FALSE)
+dat_uniq_gender_age <- unique(dat[, c('ID', 'Trial', 'Gender', 'Age')])
+mat_label <- merge(mat_label, dat_uniq_gender_age, by = c('ID', 'Trial'), sort=FALSE)
+dat_uniq_aq_lsas_eq <- unique(dat[, c('ID', 'Trial', 'AQ_overall', 'LSAS_overall', 'EQ_overall')])
+mat_label <- merge(mat_label, dat_uniq_aq_lsas_eq, by = c('ID', 'Trial'), sort = FALSE)
+
+tib_label <- as_tibble(mat_label)
+
+#participants 56, 25, 26, 27 exclude
+tib_label <- subset(tib_label, tib_label$ID != 25)
+tib_label <- subset(tib_label, tib_label$ID != 26)
+tib_label <- subset(tib_label, tib_label$ID != 27)
+tib_label <- subset(tib_label, tib_label$ID != 56)
+dataf <- as.data.frame(tib_label)
+
+# Dummy coding
+## Angry
+for (i in 1:6592){
+  if (dataf[i, 'label_string'] == 'angry'){
+    dataf[i, 'y_angry'] = 1
+  } else{
+    dataf[i, 'y_angry'] = 0
+  }
+}
+
+## Scared
+for (i in 1:6592){
+  if (dataf[i, 'label_string'] == 'scared'){
+    dataf[i, 'y_scared'] = 1
+  } else{
+    dataf[i, 'y_scared'] = 0
+  }
+}
+
+## Happy
+for (i in 1:6592){
+  if (dataf[i, 'label_string'] == 'happy'){
+    dataf[i, 'y_happy'] = 1
+  } else{
+    dataf[i, 'y_happy'] = 0
+  }
+}
+
+## Neutral
+for (i in 1:6592){
+  if (dataf[i, 'label_string'] == 'neutral'){
+    dataf[i, 'y_neutral'] = 1
+  } else{
+    dataf[i, 'y_neutral'] = 0
+  }
+}
+
+## Sad
+for (i in 1:6592){
+  if (dataf[i, 'label_string'] == 'sad'){
+    dataf[i, 'y_sad'] = 1
+  } else{
+    dataf[i, 'y_sad'] = 0
+  }
+}
+```
+
+# Logistic Regression
+
+## Angry
+
+```{r}
+library(lme4)
+library(GLMMadaptive)
+
+randomintercept_angry <- mixed_model(fixed = y_angry ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = dataf, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+summary(randomintercept_angry)
+
+```
+
+
+## Scared
+
+```{r}
+
+randomintercept_scar <- mixed_model(fixed = y_scared ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = dataf, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+summary(randomintercept_scar)
+
+
+```
+
+
+## Happy
+
+```{r}
+
+randomintercept_hap <- mixed_model(fixed = y_happy ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = dataf, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+summary(randomintercept_hap)
+
+
+```
+
+
+## Neutral
+
+```{r}
+
+randomintercept_neut <- mixed_model(fixed = y_neutral ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = dataf, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+summary(randomintercept_neut)
+
+
+```
+
+
+## Sad
+
+```{r}
+
+randomintercept_sad <- mixed_model(fixed = y_sad ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = dataf, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+summary(randomintercept_sad)
+
+```
+
+
+```{r}
+# Odds
+odds_angry <- round(exp(fixef(randomintercept_angry)), 3)
+odds_scared <- round(exp(fixef(randomintercept_scar)), 3)
+odds_happy <- round(exp(fixef(randomintercept_hap)), 3)
+odds_neutral <- round(exp(fixef(randomintercept_neut)), 3)
+odds_sad <- round(exp(fixef(randomintercept_sad)), 3)
+
+```
+
+# Probability matrix
+
+A matrix with every ID, trial and the emotion with the highest probability, the probability and the label (the one given by the participant).
+
+```{r}
+
+probability_matrix <- matrix(data = NA, nrow = 64*103, ncol = 5)
+colnames(probability_matrix) <- c('ID', 'Trial', 'Emotion with highest probability', 'Probability', 'Label')
+
+participants <- unlist(unique(dat[1]), use.names = FALSE)
+
+participants <- participants[-c(22, 23, 24, 53)]
+
+probability_matrix[, 'ID'] = rep(participants, each = 103)
+
+for(i in participants){
+  trials <- unique(dat[dat$ID == i, 'Trial'])
+  probability_matrix[probability_matrix[, 'ID'] == i, 'Trial'] = trials
+}
+
+for (i in 1:6592){
+  probability_angry <- fitted(randomintercept_angry,type = 'subject_specific')[i]
+  probability_scared <- fitted(randomintercept_scar,type = 'subject_specific')[i]
+  probability_happy <- fitted(randomintercept_hap,type = 'subject_specific')[i]
+  probability_neutral <- fitted(randomintercept_neut,type = 'subject_specific')[i]
+  probability_sad <- fitted(randomintercept_sad,type = 'subject_specific')[i]
+  names(probability_angry) <- 'angry'
+  names(probability_scared) <- 'scared'
+  names(probability_happy) <- 'happy'
+  names(probability_neutral) <- 'neutral'
+  names(probability_sad) <- 'sad'
+  emotions <- c(probability_angry, probability_scared, probability_happy,
+                probability_neutral, probability_sad)
+  emo <- names(which.max(emotions))
+  probability_matrix[i, 'Emotion with highest probability'] <- emo
+  probability_matrix[i, 'Probability'] <-round(
+    as.numeric(emotions[which.max(emotions)]), 3
+  )
+  probability_matrix[i, 'Label'] <- as.character(dataf[i, 'label_string'])
+}
+probability_df <- as.data.frame(probability_matrix)
+
+count_correct <- sum(probability_df[, 'Emotion with highest probability'] ==
+                       probability_df[, 'Label'])
+percentage_correct <- count_correct/nrow(probability_df) * 100
+
+```
+
+
+# Graphs of significant signals
+
+For every emotion, the significant signals are plotted. This is done by plotting the range of the significant variable while keeping the other variables constant. 
+## Angry
+
+```{r}
+
+ab0 <- randomintercept_angry$coef[1] # intercept
+aTrial <- randomintercept_angry$coef[2]
+aAge <- randomintercept_angry$coef[3]
+aVAS <- randomintercept_angry$coef[4]
+aGender <- randomintercept_angry$coef[5]
+aAQ <- randomintercept_angry$coef[6]
+aEQ <- randomintercept_angry$coef[7]
+aLSAS <- randomintercept_angry$coef[8]
+aInt_stim_cor <- randomintercept_angry$coef[9]
+aSl_stim_cor <- randomintercept_angry$coef[10]
+aInt_bl_cor <- randomintercept_angry$coef[11]
+aSl_bl_cor <- randomintercept_angry$coef[12]
+aInt_stim_zyg <- randomintercept_angry$coef[13]
+aSl_stim_zyg <- randomintercept_angry$coef[14]
+aInt_bl_zyg <- randomintercept_angry$coef[15]
+aSl_bl_zyg <- randomintercept_angry$coef[16]
+aInt_stim_sc <- randomintercept_angry$coef[17]
+aSl_stim_sc <- randomintercept_angry$coef[18]
+aInt_bl_sc <- randomintercept_angry$coef[19]
+aSl_bl_sc <- randomintercept_angry$coef[20]
+aInt_stim_skt <- randomintercept_angry$coef[21]
+aSl_stim_skt <- randomintercept_angry$coef[22]
+aInt_bl_skt <- randomintercept_angry$coef[23]
+aSl_bl_skt <- randomintercept_angry$coef[24]
+aInt_stim_dia <- randomintercept_angry$coef[25]
+aSl_stim_dia <- randomintercept_angry$coef[26]
+aInt_bl_dia <- randomintercept_angry$coef[27]
+aSl_bl_dia <- randomintercept_angry$coef[28]
+
+meantrial <- mean(dataf$Trial)
+meanage <- mean(dataf$Age)
+meanvas <- mean(dataf$VASValue)
+meanaq <- mean(dataf$AQ_overall)
+meaneq <- mean(dataf$EQ_overall)
+meanlsas <- mean(dataf$LSAS_overall)
+meanintstimcor <- mean(dataf$Int_stim_Cor)
+meanslstimcor <- mean(dataf$Sl_stim_Cor)
+meanintblcor <- mean(dataf$Int_bl_Cor)
+meanslblcor <- mean(dataf$Sl_bl_Cor)
+meanintstimzyg <- mean(dataf$Int_stim_Zyg)
+meanslstimzyg <- mean(dataf$Sl_stim_Zyg)
+meanintblzyg <- mean(dataf$Int_bl_Zyg)
+meanslblzyg <- mean(dataf$Sl_bl_Zyg)
+meanintstimsc <- mean(dataf$Int_stim_SC)
+meanslstimsc <- mean(dataf$Sl_stim_SC)
+meanintblsc <- mean(dataf$Int_bl_SC)
+meanslblsc <- mean(dataf$Sl_bl_SC)
+meanintstimskt <- mean(dataf$Int_stim_SKT)
+meanslstimskt <- mean(dataf$Sl_stim_SKT)
+meanintblskt <- mean(dataf$Int_bl_SKT)
+meanslblskt <- mean(dataf$Sl_bl_SKT)
+meanintstimdia <- mean(dataf$Int_stim_DIA)
+meanslstimdia <- mean(dataf$Sl_stim_DIA)
+meanintbldia <- mean(dataf$Int_bl_DIA)
+meanslbldia <- mean(dataf$Sl_bl_DIA)
+
+Int_stim_Cor_range <- seq(from=min(dataf$Int_stim_Cor),
+                          to=max(dataf$Int_stim_Cor),
+                          length.out = 6592)
+
+Sl_stim_Cor_range <- seq(from=min(dataf$Sl_stim_Cor), 
+                         to=max(dataf$Sl_stim_Cor),
+                         length.out = 6592)
+
+VAS_range <- seq(from=min(dataf$VASValue),
+                          to=max(dataf$VASValue),
+                          length.out = 6592)
+
+Int_bl_DIA_range <- seq(from=min(dataf$Int_bl_DIA),
+                          to=max(dataf$Int_bl_DIA),
+                          length.out = 6592)
+
+Sl_bl_DIA_range <- seq(from=min(dataf$Sl_bl_DIA),
+                          to=max(dataf$Sl_bl_DIA),
+                          length.out = 6592)
+
+```
+
+
+### VAS
+
+```{r}
+
+angry_VAS_MALE <- ab0 + 
+  meantrial * aTrial + 
+  meanage * aAge + 
+  VAS_range * aVAS + 
+  1 * aGender + 
+  meanaq * aAQ + 
+  meaneq * aEQ + 
+  meanlsas * aLSAS +
+  meanintstimcor * aInt_stim_cor + 
+  meanslstimcor * aSl_stim_cor + 
+  meanintblcor * aInt_bl_cor + 
+  meanslblcor * aSl_bl_cor + 
+  meanintstimzyg * aInt_stim_zyg + 
+  meanslstimzyg * aSl_stim_zyg + 
+  meanintblzyg * aInt_bl_zyg + 
+  meanslblzyg * aSl_bl_zyg + 
+  meanintstimsc * aInt_stim_sc + 
+  meanslstimsc * aSl_stim_sc + 
+  meanintblsc * aInt_bl_sc + 
+  meanslblsc * aSl_bl_sc + 
+  meanintstimskt * aInt_stim_skt + 
+  meanslstimskt * aSl_stim_skt + 
+  meanintblskt * aInt_bl_skt + 
+  meanslblskt * aSl_bl_skt +
+  meanintstimdia * aInt_stim_dia + 
+  meanslstimdia * aSl_stim_dia + 
+  meanintbldia * aInt_bl_dia + 
+  meanslbldia * aSl_bl_dia
+
+angry_VAS_MALE_probs <- exp(angry_VAS_MALE)/
+  (1 + exp(angry_VAS_MALE))
+
+angry_VAS_FEMALE <- ab0 + 
+  meantrial * aTrial + 
+  meanage * aAge + 
+  VAS_range * aVAS + 
+  meanaq * aAQ + 
+  meaneq * aEQ + 
+  meanlsas * aLSAS +
+  meanintstimcor * aInt_stim_cor + 
+  meanslstimcor * aSl_stim_cor + 
+  meanintblcor * aInt_bl_cor + 
+  meanslblcor * aSl_bl_cor + 
+  meanintstimzyg * aInt_stim_zyg + 
+  meanslstimzyg * aSl_stim_zyg + 
+  meanintblzyg * aInt_bl_zyg + 
+  meanslblzyg * aSl_bl_zyg + 
+  meanintstimsc * aInt_stim_sc + 
+  meanslstimsc * aSl_stim_sc + 
+  meanintblsc * aInt_bl_sc + 
+  meanslblsc * aSl_bl_sc + 
+  meanintstimskt * aInt_stim_skt + 
+  meanslstimskt * aSl_stim_skt + 
+  meanintblskt * aInt_bl_skt + 
+  meanslblskt * aSl_bl_skt +
+  meanintstimdia * aInt_stim_dia + 
+  meanslstimdia * aSl_stim_dia + 
+  meanintbldia * aInt_bl_dia + 
+  meanslbldia * aSl_bl_dia
+
+angry_VAS_FEMALE_probs <- exp(angry_VAS_FEMALE)/
+  (1 + exp(angry_VAS_FEMALE))
+
+plot(VAS_range, angry_VAS_MALE_probs, 
+     ylim=c(0,0.5),
+     type="l", 
+     lwd=3, 
+     lty=1, 
+     col="turquoise2", 
+     xlab="VAS", ylab="P(angry)", main=
+       "Probability of labelling picture as angry as a function of VAS score and average scores on the other predictors", cex.main=0.99) 
+lines(VAS_range, angry_VAS_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=1, 
+      col="pink")
+legend('topleft',inset = 0.02,legend = c('male', 'female'),col = c('turquoise2', 'pink'), cex = 0.80, lty = 1)
+
+
+```
+
+### Int bl DIA
+
+```{r}
+
+angry_int_bl_dia_MALE <- ab0 + 
+  meantrial * aTrial + 
+  meanage * aAge + 
+  meanvas * aVAS + 
+  1 * aGender + 
+  meanaq * aAQ + 
+  meaneq * aEQ + 
+  meanlsas * aLSAS +
+  meanintstimcor * aInt_stim_cor + 
+  meanslstimcor * aSl_stim_cor + 
+  meanintblcor * aInt_bl_cor + 
+  meanslblcor * aSl_bl_cor + 
+  meanintstimzyg * aInt_stim_zyg + 
+  meanslstimzyg * aSl_stim_zyg + 
+  meanintblzyg * aInt_bl_zyg + 
+  meanslblzyg * aSl_bl_zyg + 
+  meanintstimsc * aInt_stim_sc + 
+  meanslstimsc * aSl_stim_sc + 
+  meanintblsc * aInt_bl_sc + 
+  meanslblsc * aSl_bl_sc + 
+  meanintstimskt * aInt_stim_skt + 
+  meanslstimskt * aSl_stim_skt + 
+  meanintblskt * aInt_bl_skt + 
+  meanslblskt * aSl_bl_skt +
+  meanintstimdia * aInt_stim_dia + 
+  meanslstimdia * aSl_stim_dia + 
+  Int_bl_DIA_range * aInt_bl_dia + 
+  meanslbldia * aSl_bl_dia
+
+angry_int_bl_dia_MALE_probs <- exp(angry_int_bl_dia_MALE)/
+  (1 + exp(angry_int_bl_dia_MALE))
+
+angry_int_bl_dia_FEMALE <- ab0 + 
+  meantrial * aTrial + 
+  meanage * aAge + 
+  meanvas * aVAS + 
+  meanaq * aAQ + 
+  meaneq * aEQ + 
+  meanlsas * aLSAS +
+  meanintstimcor * aInt_stim_cor + 
+  meanslstimcor * aSl_stim_cor + 
+  meanintblcor * aInt_bl_cor + 
+  meanslblcor * aSl_bl_cor + 
+  meanintstimzyg * aInt_stim_zyg + 
+  meanslstimzyg * aSl_stim_zyg + 
+  meanintblzyg * aInt_bl_zyg + 
+  meanslblzyg * aSl_bl_zyg + 
+  meanintstimsc * aInt_stim_sc + 
+  meanslstimsc * aSl_stim_sc + 
+  meanintblsc * aInt_bl_sc + 
+  meanslblsc * aSl_bl_sc + 
+  meanintstimskt * aInt_stim_skt + 
+  meanslstimskt * aSl_stim_skt + 
+  meanintblskt * aInt_bl_skt + 
+  meanslblskt * aSl_bl_skt +
+  meanintstimdia * aInt_stim_dia + 
+  meanslstimdia * aSl_stim_dia + 
+  Int_bl_DIA_range * aInt_bl_dia + 
+  meanslbldia * aSl_bl_dia
+
+angry_int_bl_dia_FEMALE_probs <- exp(angry_int_bl_dia_FEMALE)/
+  (1 + exp(angry_int_bl_dia_FEMALE))
+
+plot(Int_bl_DIA_range, angry_int_bl_dia_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_bl_DIA", ylab="P(angry)", main=
+       "Probability of labelling picture as angry") 
+lines(Int_bl_DIA_range, angry_int_bl_dia_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+
+### Sl bl DIA
+
+```{r}
+
+angry_sl_bl_dia_MALE <- ab0 + 
+  meantrial * aTrial + 
+  meanage * aAge + 
+  meanvas * aVAS + 
+  1 * aGender + 
+  meanaq * aAQ + 
+  meaneq * aEQ + 
+  meanlsas * aLSAS +
+  meanintstimcor * aInt_stim_cor + 
+  meanslstimcor * aSl_stim_cor + 
+  meanintblcor * aInt_bl_cor + 
+  meanslblcor * aSl_bl_cor + 
+  meanintstimzyg * aInt_stim_zyg + 
+  meanslstimzyg * aSl_stim_zyg + 
+  meanintblzyg * aInt_bl_zyg + 
+  meanslblzyg * aSl_bl_zyg + 
+  meanintstimsc * aInt_stim_sc + 
+  meanslstimsc * aSl_stim_sc + 
+  meanintblsc * aInt_bl_sc + 
+  meanslblsc * aSl_bl_sc + 
+  meanintstimskt * aInt_stim_skt + 
+  meanslstimskt * aSl_stim_skt + 
+  meanintblskt * aInt_bl_skt + 
+  meanslblskt * aSl_bl_skt +
+  meanintstimdia * aInt_stim_dia + 
+  meanslstimdia * aSl_stim_dia + 
+  meanintbldia * aInt_bl_dia + 
+  Sl_bl_DIA_range * aSl_bl_dia
+
+angry_sl_bl_dia_MALE_probs <- exp(angry_sl_bl_dia_MALE)/
+  (1 + exp(angry_sl_bl_dia_MALE))
+
+angry_sl_bl_dia_FEMALE <- ab0 + 
+  meantrial * aTrial + 
+  meanage * aAge + 
+  meanvas * aVAS + 
+  meanaq * aAQ + 
+  meaneq * aEQ + 
+  meanlsas * aLSAS +
+  meanintstimcor * aInt_stim_cor + 
+  meanslstimcor * aSl_stim_cor + 
+  meanintblcor * aInt_bl_cor + 
+  meanslblcor * aSl_bl_cor + 
+  meanintstimzyg * aInt_stim_zyg + 
+  meanslstimzyg * aSl_stim_zyg + 
+  meanintblzyg * aInt_bl_zyg + 
+  meanslblzyg * aSl_bl_zyg + 
+  meanintstimsc * aInt_stim_sc + 
+  meanslstimsc * aSl_stim_sc + 
+  meanintblsc * aInt_bl_sc + 
+  meanslblsc * aSl_bl_sc + 
+  meanintstimskt * aInt_stim_skt + 
+  meanslstimskt * aSl_stim_skt + 
+  meanintblskt * aInt_bl_skt + 
+  meanslblskt * aSl_bl_skt +
+  meanintstimdia * aInt_stim_dia + 
+  meanslstimdia * aSl_stim_dia + 
+  meanintbldia * aInt_bl_dia + 
+  Sl_bl_DIA_range * aSl_bl_dia
+
+angry_sl_bl_dia_FEMALE_probs <- exp(angry_sl_bl_dia_FEMALE)/
+  (1 + exp(angry_sl_bl_dia_FEMALE))
+
+plot(Sl_bl_DIA_range, angry_sl_bl_dia_MALE_probs, 
+     ylim=c(0,0.5),
+     type="l", 
+     lwd=3, 
+     lty=1, 
+     col="turquoise2", 
+     xlab="Sl_bl_DIA", ylab="P(angry)", main=
+       "Probability of labelling picture as angry as a function of Sl_bl_DIA and average scores on the other predictors") 
+lines(Sl_bl_DIA_range, angry_sl_bl_dia_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=1, 
+      col="pink")
+legend('topleft',inset = 0.02,legend = c('male', 'female'),col = c('turquoise2', 'pink'), cex = 0.80, lty = 1)
+
+```
+
+
+## Scared
+
+```{r}
+scb0 <- randomintercept_scar$coef[1] # intercept
+scTrial <- randomintercept_scar$coef[2]
+scAge <- randomintercept_scar$coef[3]
+scVAS <- randomintercept_scar$coef[4]
+scGender <- randomintercept_scar$coef[5]
+scAQ <- randomintercept_scar$coef[6]
+scEQ <- randomintercept_scar$coef[7]
+scLSAS <- randomintercept_scar$coef[8]
+scInt_stim_cor <- randomintercept_scar$coef[9]
+scSl_stim_cor <- randomintercept_scar$coef[10]
+scInt_bl_cor <- randomintercept_scar$coef[11]
+scSl_bl_cor <- randomintercept_scar$coef[12]
+scInt_stim_zyg <- randomintercept_scar$coef[13]
+scSl_stim_zyg <- randomintercept_scar$coef[14]
+scInt_bl_zyg <- randomintercept_scar$coef[15]
+scSl_bl_zyg <- randomintercept_scar$coef[16]
+scInt_stim_sc <- randomintercept_scar$coef[17]
+scSl_stim_sc <- randomintercept_scar$coef[18]
+scInt_bl_sc <- randomintercept_scar$coef[19]
+scSl_bl_sc <- randomintercept_scar$coef[20]
+scInt_stim_skt <- randomintercept_scar$coef[21]
+scSl_stim_skt <- randomintercept_scar$coef[22]
+scInt_bl_skt <- randomintercept_scar$coef[23]
+scSl_bl_skt <- randomintercept_scar$coef[24]
+scInt_stim_dia <- randomintercept_scar$coef[25]
+scSl_stim_dia <- randomintercept_scar$coef[26]
+scInt_bl_dia <- randomintercept_scar$coef[27]
+scSl_bl_dia <- randomintercept_scar$coef[28]
+
+meantrial <- mean(dataf$Trial)
+meanage <- mean(dataf$Age)
+meanvas <- mean(dataf$VASValue)
+meanaq <- mean(dataf$AQ_overall)
+meaneq <- mean(dataf$EQ_overall)
+meanlsas <- mean(dataf$LSAS_overall)
+meanintstimcor <- mean(dataf$Int_stim_Cor)
+meanslstimcor <- mean(dataf$Sl_stim_Cor)
+meanintblcor <- mean(dataf$Int_bl_Cor)
+meanslblcor <- mean(dataf$Sl_bl_Cor)
+meanintstimzyg <- mean(dataf$Int_stim_Zyg)
+meanslstimzyg <- mean(dataf$Sl_stim_Zyg)
+meanintblzyg <- mean(dataf$Int_bl_Zyg)
+meanslblzyg <- mean(dataf$Sl_bl_Zyg)
+meanintstimsc <- mean(dataf$Int_stim_SC)
+meanslstimsc <- mean(dataf$Sl_stim_SC)
+meanintblsc <- mean(dataf$Int_bl_SC)
+meanslblsc <- mean(dataf$Sl_bl_SC)
+meanintstimskt <- mean(dataf$Int_stim_SKT)
+meanslstimskt <- mean(dataf$Sl_stim_SKT)
+meanintblskt <- mean(dataf$Int_bl_SKT)
+meanslblskt <- mean(dataf$Sl_bl_SKT)
+meanintstimdia <- mean(dataf$Int_stim_DIA)
+meanslstimdia <- mean(dataf$Sl_stim_DIA)
+meanintbldia <- mean(dataf$Int_bl_DIA)
+meanslbldia <- mean(dataf$Sl_bl_DIA)
+
+VAS_range <- seq(from=min(dataf$VASValue),
+                          to=max(dataf$VASValue),
+                          length.out = 6592)
+
+AQ_range <- seq(from=min(dataf$AQ_overall),
+                          to=max(dataf$AQ_overall),
+                          length.out = 6592)
+
+Sl_stim_Zyg_range <- seq(from=min(dataf$Sl_stim_Zyg),
+                          to=max(dataf$Sl_stim_Zyg),
+                          length.out = 6592)
+
+Sl_stim_SKT_range <- seq(from=min(dataf$Sl_stim_SKT),
+                          to=max(dataf$Sl_stim_SKT),
+                          length.out = 6592)
+
+Int_bl_SKT_range <- seq(from=min(dataf$Int_bl_SKT),
+                          to=max(dataf$Int_bl_SKT),
+                          length.out = 6592)
+
+Sl_bl_SKT_range <- seq(from=min(dataf$Sl_bl_SKT),
+                          to=max(dataf$Sl_bl_SKT),
+                          length.out = 6592)
+
+```
+
+### VAS
+
+```{r}
+scared_VAS_MALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  VAS_range * scVAS + 
+  1 * scGender + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_VAS_MALE_probs <- exp(scared_VAS_MALE)/
+  (1 + exp(scared_VAS_MALE))
+
+scared_VAS_FEMALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  VAS_range * scVAS + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_VAS_FEMALE_probs <- exp(scared_VAS_FEMALE)/
+  (1 + exp(scared_VAS_FEMALE))
+
+plot(VAS_range, scared_VAS_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="VAS", ylab="P(scared)", main=
+       "Probability of labelling picture as scared") 
+lines(VAS_range, scared_VAS_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+
+
+```
+
+### AQ
+
+```{r}
+scared_AQ_MALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  1 * scGender + 
+  AQ_range * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_AQ_MALE_probs <- exp(scared_AQ_MALE)/
+  (1 + exp(scared_AQ_MALE))
+
+scared_AQ_FEMALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  AQ_range * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_AQ_FEMALE_probs <- exp(scared_AQ_FEMALE)/
+  (1 + exp(scared_AQ_FEMALE))
+
+plot(AQ_range, scared_AQ_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="AQ", ylab="P(scared)", main=
+       "Probability of labelling picture as scared") 
+lines(AQ_range, scared_AQ_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+
+```
+
+### Sl stim Zyg
+
+```{r}
+scared_sl_stim_zyg_MALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  1 * scGender + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  Sl_stim_Zyg_range * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_sl_stim_zyg_MALE_probs <- exp(scared_sl_stim_zyg_MALE)/
+  (1 + exp(scared_sl_stim_zyg_MALE))
+
+scared_sl_stim_zyg_FEMALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  Sl_stim_Zyg_range * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_sl_stim_zyg_FEMALE_probs <- exp(scared_sl_stim_zyg_FEMALE)/
+  (1 + exp(scared_sl_stim_zyg_FEMALE))
+
+plot(Sl_stim_Zyg_range, scared_sl_stim_zyg_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_stim_Zyg", ylab="P(scared)", main=
+       "Probability of labelling picture as scared") 
+lines(Sl_stim_Zyg_range, scared_sl_stim_zyg_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Sl stim SKT
+
+```{r}
+scared_sl_stim_skt_MALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  1 * scGender + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  Sl_stim_SKT_range * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_sl_stim_skt_MALE_probs <- exp(scared_sl_stim_skt_MALE)/
+  (1 + exp(scared_sl_stim_skt_MALE))
+
+scared_sl_stim_skt_FEMALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  Sl_stim_SKT_range * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_sl_stim_skt_FEMALE_probs <- exp(scared_sl_stim_skt_FEMALE)/
+  (1 + exp(scared_sl_stim_skt_FEMALE))
+
+plot(Sl_stim_SKT_range, scared_sl_stim_skt_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_stim_SKT", ylab="P(scared)", main=
+       "Probability of labelling picture as scared") 
+lines(Sl_stim_SKT_range, scared_sl_stim_skt_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+
+```
+
+### Int bl SKT
+
+```{r}
+scared_int_bl_skt_MALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  1 * scGender + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  Int_bl_SKT_range * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_int_bl_skt_MALE_probs <- exp(scared_int_bl_skt_MALE)/
+  (1 + exp(scared_int_bl_skt_MALE))
+
+scared_int_bl_skt_FEMALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  Int_bl_SKT_range * scInt_bl_skt + 
+  meanslblskt * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_int_bl_skt_FEMALE_probs <- exp(scared_int_bl_skt_FEMALE)/
+  (1 + exp(scared_int_bl_skt_FEMALE))
+
+plot(Int_bl_SKT_range, scared_int_bl_skt_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_bl_SKT", ylab="P(scared)", main=
+       "Probability of labelling picture as scared") 
+lines(Int_bl_SKT_range, scared_int_bl_skt_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Sl bl SKT
+
+```{r}
+scared_sl_bl_skt_MALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  1 * scGender + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  Sl_bl_SKT_range * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_sl_bl_skt_MALE_probs <- exp(scared_sl_bl_skt_MALE)/
+  (1 + exp(scared_sl_bl_skt_MALE))
+
+scared_sl_bl_skt_FEMALE <- scb0 + 
+  meantrial * scTrial + 
+  meanage * scAge + 
+  meanvas * scVAS + 
+  meanaq * scAQ + 
+  meaneq * scEQ + 
+  meanlsas * scLSAS +
+  meanintstimcor * scInt_stim_cor + 
+  meanslstimcor * scSl_stim_cor + 
+  meanintblcor * scInt_bl_cor + 
+  meanslblcor * scSl_bl_cor + 
+  meanintstimzyg * scInt_stim_zyg + 
+  meanslstimzyg * scSl_stim_zyg + 
+  meanintblzyg * scInt_bl_zyg + 
+  meanslblzyg * scSl_bl_zyg + 
+  meanintstimsc * scInt_stim_sc + 
+  meanslstimsc * scSl_stim_sc + 
+  meanintblsc * scInt_bl_sc + 
+  meanslblsc * scSl_bl_sc + 
+  meanintstimskt * scInt_stim_skt + 
+  meanslstimskt * scSl_stim_skt + 
+  meanintblskt * scInt_bl_skt + 
+  Sl_bl_SKT_range * scSl_bl_skt +
+  meanintstimdia * scInt_stim_dia + 
+  meanslstimdia * scSl_stim_dia + 
+  meanintbldia * scInt_bl_dia + 
+  meanslbldia * scSl_bl_dia
+
+scared_sl_bl_skt_FEMALE_probs <- exp(scared_sl_bl_skt_FEMALE)/
+  (1 + exp(scared_sl_bl_skt_FEMALE))
+
+plot(Sl_bl_SKT_range, scared_sl_bl_skt_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_bl_SKT", ylab="P(scared)", main=
+       "Probability of labelling picture as scared") 
+lines(Sl_bl_SKT_range, scared_sl_bl_skt_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+```
+
+## Happy 
+
+```{r}
+hb0 <- randomintercept_hap$coef[1] # intercept
+hTrial <- randomintercept_hap$coef[2]
+hAge <- randomintercept_hap$coef[3]
+hVAS <- randomintercept_hap$coef[4]
+hGender <- randomintercept_hap$coef[5]
+hAQ <- randomintercept_hap$coef[6]
+hEQ <- randomintercept_hap$coef[7]
+hLSAS <- randomintercept_hap$coef[8]
+hInt_stim_cor <- randomintercept_hap$coef[9]
+hSl_stim_cor <- randomintercept_hap$coef[10]
+hInt_bl_cor <- randomintercept_hap$coef[11]
+hSl_bl_cor <- randomintercept_hap$coef[12]
+hInt_stim_zyg <- randomintercept_hap$coef[13]
+hSl_stim_zyg <- randomintercept_hap$coef[14]
+hInt_bl_zyg <- randomintercept_hap$coef[15]
+hSl_bl_zyg <- randomintercept_hap$coef[16]
+hInt_stim_sc <- randomintercept_hap$coef[17]
+hSl_stim_sc <- randomintercept_hap$coef[18]
+hInt_bl_sc <- randomintercept_hap$coef[19]
+hSl_bl_sc <- randomintercept_hap$coef[20]
+hInt_stim_skt <- randomintercept_hap$coef[21]
+hSl_stim_skt <- randomintercept_hap$coef[22]
+hInt_bl_skt <- randomintercept_hap$coef[23]
+hSl_bl_skt <- randomintercept_hap$coef[24]
+hInt_stim_dia <- randomintercept_hap$coef[25]
+hSl_stim_dia <- randomintercept_hap$coef[26]
+hInt_bl_dia <- randomintercept_hap$coef[27]
+hSl_bl_dia <- randomintercept_hap$coef[28]
+
+
+Trial_range <- seq(from=min(dataf$Trial),
+                          to=max(dataf$Trial),
+                          length.out = 6592)
+
+VAS_range <- seq(from=min(dataf$VASValue),
+                          to=max(dataf$VASValue),
+                          length.out = 6592)
+
+Int_stim_Cor_range <- seq(from=min(dataf$Int_stim_Cor),
+                          to=max(dataf$Int_stim_Cor),
+                          length.out = 6592)
+
+Int_bl_Zyg_range <- seq(from=min(dataf$Int_bl_Zyg),
+                          to=max(dataf$Int_bl_Zyg),
+                          length.out = 6592)
+
+Sl_bl_Zyg_range <- seq(from=min(dataf$Sl_bl_Zyg),
+                          to=max(dataf$Sl_bl_Zyg),
+                          length.out = 6592)
+
+Int_stim_DIA_range <- seq(from=min(dataf$Int_stim_DIA),
+                          to=max(dataf$Int_stim_DIA),
+                          length.out = 6592)
+
+```
+
+### Trial 
+
+```{r}
+happy_trial_MALE <- hb0 + 
+  Trial_range * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  1 * hGender + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_trial_MALE_probs <- exp(happy_trial_MALE)/
+  (1 + exp(happy_trial_MALE))
+
+happy_trial_FEMALE <- hb0 + 
+  Trial_range * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_trial_FEMALE_probs <- exp(happy_trial_FEMALE)/
+  (1 + exp(happy_trial_FEMALE))
+
+plot(Trial_range, happy_trial_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Trial", ylab="P(happy)", main=
+       "Probability of labelling picture as happy") 
+lines(Trial_range, happy_trial_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### VAS
+
+```{r}
+happy_VAS_MALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  VAS_range * hVAS + 
+  1 * hGender + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_VAS_MALE_probs <- exp(happy_VAS_MALE)/
+  (1 + exp(happy_VAS_MALE))
+
+happy_VAS_FEMALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  VAS_range * hVAS + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_VAS_FEMALE_probs <- exp(happy_VAS_FEMALE)/
+  (1 + exp(happy_VAS_FEMALE))
+
+plot(VAS_range, happy_VAS_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="VAS", ylab="P(happy)", main=
+       "Probability of labelling picture as happy") 
+lines(VAS_range, happy_VAS_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Int stim Cor
+
+```{r}
+happy_int_stim_cor_MALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  1 * hGender + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  Int_stim_Cor_range * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_int_stim_cor_MALE_probs <- exp(happy_int_stim_cor_MALE)/
+  (1 + exp(happy_int_stim_cor_MALE))
+
+happy_int_stim_cor_FEMALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  Int_stim_Cor_range * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_int_stim_cor_FEMALE_probs <- exp(happy_int_stim_cor_FEMALE)/
+  (1 + exp(happy_int_stim_cor_FEMALE))
+
+plot(Int_stim_Cor_range, happy_int_stim_cor_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_stim_Cor", ylab="P(happy)", main=
+       "Probability of labelling picture as happy") 
+lines(Int_stim_Cor_range, happy_int_stim_cor_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+```
+
+### Int bl Zyg
+
+```{r}
+happy_int_bl_zyg_MALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  1 * hGender + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  Int_bl_Zyg_range * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_int_bl_zyg_MALE_probs <- exp(happy_int_bl_zyg_MALE)/
+  (1 + exp(happy_int_bl_zyg_MALE))
+
+happy_int_bl_zyg_FEMALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  Int_bl_Zyg_range * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_int_bl_zyg_FEMALE_probs <- exp(happy_int_bl_zyg_FEMALE)/
+  (1 + exp(happy_int_bl_zyg_FEMALE))
+
+plot(Int_bl_Zyg_range, happy_int_bl_zyg_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_bl_Zyg", ylab="P(happy)", main=
+       "Probability of labelling picture as happy") 
+lines(Int_bl_Zyg_range, happy_int_bl_zyg_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Sl bl Zyg
+
+```{r}
+happy_sl_bl_zyg_MALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  1 * hGender + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  Sl_bl_Zyg_range * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_sl_bl_zyg_MALE_probs <- exp(happy_sl_bl_zyg_MALE)/
+  (1 + exp(happy_sl_bl_zyg_MALE))
+
+happy_sl_bl_zyg_FEMALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  Sl_bl_Zyg_range * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  meanintstimdia * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_sl_bl_zyg_FEMALE_probs <- exp(happy_sl_bl_zyg_FEMALE)/
+  (1 + exp(happy_sl_bl_zyg_FEMALE))
+
+plot(Sl_bl_Zyg_range, happy_sl_bl_zyg_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_bl_Zyg", ylab="P(happy)", main=
+       "Probability of labelling picture as happy") 
+lines(Sl_bl_Zyg_range, happy_sl_bl_zyg_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Int stim DIA
+
+```{r}
+happy_int_stim_dia_MALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  1 * hGender + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  Int_stim_DIA_range * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_int_stim_dia_MALE_probs <- exp(happy_int_stim_dia_MALE)/
+  (1 + exp(happy_int_stim_dia_MALE))
+
+happy_int_stim_dia_FEMALE <- hb0 + 
+  meantrial * hTrial + 
+  meanage * hAge + 
+  meanvas * hVAS + 
+  meanaq * hAQ + 
+  meaneq * hEQ + 
+  meanlsas * hLSAS +
+  meanintstimcor * hInt_stim_cor + 
+  meanslstimcor * hSl_stim_cor + 
+  meanintblcor * hInt_bl_cor + 
+  meanslblcor * hSl_bl_cor + 
+  meanintstimzyg * hInt_stim_zyg + 
+  meanslstimzyg * hSl_stim_zyg + 
+  meanintblzyg * hInt_bl_zyg + 
+  meanslblzyg * hSl_bl_zyg + 
+  meanintstimsc * hInt_stim_sc + 
+  meanslstimsc * hSl_stim_sc + 
+  meanintblsc * hInt_bl_sc + 
+  meanslblsc * hSl_bl_sc + 
+  meanintstimskt * hInt_stim_skt + 
+  meanslstimskt * hSl_stim_skt + 
+  meanintblskt * hInt_bl_skt + 
+  meanslblskt * hSl_bl_skt +
+  Int_stim_DIA_range * hInt_stim_dia + 
+  meanslstimdia * hSl_stim_dia + 
+  meanintbldia * hInt_bl_dia + 
+  meanslbldia * hSl_bl_dia
+
+happy_int_stim_dia_FEMALE_probs <- exp(happy_int_stim_dia_FEMALE)/
+  (1 + exp(happy_int_stim_dia_FEMALE))
+
+plot(Int_stim_DIA_range, happy_int_stim_dia_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_stim_DIA", ylab="P(happy)", main=
+       "Probability of labelling picture as happy") 
+lines(Int_stim_DIA_range, happy_int_stim_dia_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+
+```
+
+## Neutral
+
+```{r}
+nb0 <- randomintercept_neut$coef[1] # intercept
+nTrial <- randomintercept_neut$coef[2]
+nAge <- randomintercept_neut$coef[3]
+nVAS <- randomintercept_neut$coef[4]
+nGender <- randomintercept_neut$coef[5]
+nAQ <- randomintercept_neut$coef[6]
+nEQ <- randomintercept_neut$coef[7]
+nLSAS <- randomintercept_neut$coef[8]
+nInt_stim_cor <- randomintercept_neut$coef[9]
+nSl_stim_cor <- randomintercept_neut$coef[10]
+nInt_bl_cor <- randomintercept_neut$coef[11]
+nSl_bl_cor <- randomintercept_neut$coef[12]
+nInt_stim_zyg <- randomintercept_neut$coef[13]
+nSl_stim_zyg <- randomintercept_neut$coef[14]
+nInt_bl_zyg <- randomintercept_neut$coef[15]
+nSl_bl_zyg <- randomintercept_neut$coef[16]
+nInt_stim_sc <- randomintercept_neut$coef[17]
+nSl_stim_sc <- randomintercept_neut$coef[18]
+nInt_bl_sc <- randomintercept_neut$coef[19]
+nSl_bl_sc <- randomintercept_neut$coef[20]
+nInt_stim_skt <- randomintercept_neut$coef[21]
+nSl_stim_skt <- randomintercept_neut$coef[22]
+nInt_bl_skt <- randomintercept_neut$coef[23]
+nSl_bl_skt <- randomintercept_neut$coef[24]
+nInt_stim_dia <- randomintercept_neut$coef[25]
+nSl_stim_dia <- randomintercept_neut$coef[26]
+nInt_bl_dia <- randomintercept_neut$coef[27]
+nSl_bl_dia <- randomintercept_neut$coef[28]
+
+VAS_range <- seq(from=min(dataf$VASValue),
+                          to=max(dataf$VASValue),
+                          length.out = 6592)
+
+Int_stim_Zyg_range <- seq(from=min(dataf$Int_stim_Zyg),
+                          to=max(dataf$Int_stim_Zyg),
+                          length.out = 6592)
+
+Sl_stim_Zyg_range <- seq(from=min(dataf$Sl_stim_Zyg),
+                          to=max(dataf$Sl_stim_Zyg),
+                          length.out = 6592)
+
+```
+
+### VAS
+
+```{r}
+neutral_VAS_MALE <- nb0 + 
+  meantrial * nTrial + 
+  meanage * nAge + 
+  VAS_range * nVAS + 
+  1 * nGender + 
+  meanaq * nAQ + 
+  meaneq * nEQ + 
+  meanlsas * nLSAS +
+  meanintstimcor * nInt_stim_cor + 
+  meanslstimcor * nSl_stim_cor + 
+  meanintblcor * nInt_bl_cor + 
+  meanslblcor * nSl_bl_cor + 
+  meanintstimzyg * nInt_stim_zyg + 
+  meanslstimzyg * nSl_stim_zyg + 
+  meanintblzyg * nInt_bl_zyg + 
+  meanslblzyg * nSl_bl_zyg + 
+  meanintstimsc * nInt_stim_sc + 
+  meanslstimsc * nSl_stim_sc + 
+  meanintblsc * nInt_bl_sc + 
+  meanslblsc * nSl_bl_sc + 
+  meanintstimskt * nInt_stim_skt + 
+  meanslstimskt * nSl_stim_skt + 
+  meanintblskt * nInt_bl_skt + 
+  meanslblskt * nSl_bl_skt +
+  meanintstimdia * nInt_stim_dia + 
+  meanslstimdia * nSl_stim_dia + 
+  meanintbldia * nInt_bl_dia + 
+  meanslbldia * nSl_bl_dia
+
+neutral_VAS_MALE_probs <- exp(neutral_VAS_MALE)/
+  (1 + exp(neutral_VAS_MALE))
+
+neutral_VAS_FEMALE <- nb0 + 
+  meantrial * nTrial + 
+  meanage * nAge + 
+  VAS_range * nVAS + 
+  meanaq * nAQ + 
+  meaneq * nEQ + 
+  meanlsas * nLSAS +
+  meanintstimcor * nInt_stim_cor + 
+  meanslstimcor * nSl_stim_cor + 
+  meanintblcor * nInt_bl_cor + 
+  meanslblcor * nSl_bl_cor + 
+  meanintstimzyg * nInt_stim_zyg + 
+  meanslstimzyg * nSl_stim_zyg + 
+  meanintblzyg * nInt_bl_zyg + 
+  meanslblzyg * nSl_bl_zyg + 
+  meanintstimsc * nInt_stim_sc + 
+  meanslstimsc * nSl_stim_sc + 
+  meanintblsc * nInt_bl_sc + 
+  meanslblsc * nSl_bl_sc + 
+  meanintstimskt * nInt_stim_skt + 
+  meanslstimskt * nSl_stim_skt + 
+  meanintblskt * nInt_bl_skt + 
+  meanslblskt * nSl_bl_skt +
+  meanintstimdia * nInt_stim_dia + 
+  meanslstimdia * nSl_stim_dia + 
+  meanintbldia * nInt_bl_dia + 
+  meanslbldia * nSl_bl_dia
+
+neutral_VAS_FEMALE_probs <- exp(neutral_VAS_FEMALE)/
+  (1 + exp(neutral_VAS_FEMALE))
+
+plot(VAS_range, neutral_VAS_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="VAS", ylab="P(neutral)", main=
+       "Probability of labelling picture as neutral") 
+lines(VAS_range, neutral_VAS_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+```
+
+### Int stim Zyg
+
+```{r}
+neutral_int_stim_zyg_MALE <- nb0 + 
+  meantrial * nTrial + 
+  meanage * nAge + 
+  meanvas * nVAS + 
+  1 * nGender + 
+  meanaq * nAQ + 
+  meaneq * nEQ + 
+  meanlsas * nLSAS +
+  meanintstimcor * nInt_stim_cor + 
+  meanslstimcor * nSl_stim_cor + 
+  meanintblcor * nInt_bl_cor + 
+  meanslblcor * nSl_bl_cor + 
+  Int_stim_Zyg_range * nInt_stim_zyg + 
+  meanslstimzyg * nSl_stim_zyg + 
+  meanintblzyg * nInt_bl_zyg + 
+  meanslblzyg * nSl_bl_zyg + 
+  meanintstimsc * nInt_stim_sc + 
+  meanslstimsc * nSl_stim_sc + 
+  meanintblsc * nInt_bl_sc + 
+  meanslblsc * nSl_bl_sc + 
+  meanintstimskt * nInt_stim_skt + 
+  meanslstimskt * nSl_stim_skt + 
+  meanintblskt * nInt_bl_skt + 
+  meanslblskt * nSl_bl_skt +
+  meanintstimdia * nInt_stim_dia + 
+  meanslstimdia * nSl_stim_dia + 
+  meanintbldia * nInt_bl_dia + 
+  meanslbldia * nSl_bl_dia
+
+neutral_int_stim_zyg_MALE_probs <- exp(neutral_int_stim_zyg_MALE)/
+  (1 + exp(neutral_int_stim_zyg_MALE))
+
+neutral_int_stim_zyg_FEMALE <- nb0 + 
+  meantrial * nTrial + 
+  meanage * nAge + 
+  meanvas * nVAS + 
+  meanaq * nAQ + 
+  meaneq * nEQ + 
+  meanlsas * nLSAS +
+  meanintstimcor * nInt_stim_cor + 
+  meanslstimcor * nSl_stim_cor + 
+  meanintblcor * nInt_bl_cor + 
+  meanslblcor * nSl_bl_cor + 
+  Int_stim_Zyg_range * nInt_stim_zyg + 
+  meanslstimzyg * nSl_stim_zyg + 
+  meanintblzyg * nInt_bl_zyg + 
+  meanslblzyg * nSl_bl_zyg + 
+  meanintstimsc * nInt_stim_sc + 
+  meanslstimsc * nSl_stim_sc + 
+  meanintblsc * nInt_bl_sc + 
+  meanslblsc * nSl_bl_sc + 
+  meanintstimskt * nInt_stim_skt + 
+  meanslstimskt * nSl_stim_skt + 
+  meanintblskt * nInt_bl_skt + 
+  meanslblskt * nSl_bl_skt +
+  meanintstimdia * nInt_stim_dia + 
+  meanslstimdia * nSl_stim_dia + 
+  meanintbldia * nInt_bl_dia + 
+  meanslbldia * nSl_bl_dia
+
+neutral_int_stim_zyg_FEMALE_probs <- exp(neutral_int_stim_zyg_FEMALE)/
+  (1 + exp(neutral_int_stim_zyg_FEMALE))
+
+plot(Int_stim_Zyg_range, neutral_int_stim_zyg_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_stim_Zyg", ylab="P(neutral)", main=
+       "Probability of labelling picture as neutral") 
+lines(Int_stim_Zyg_range, neutral_int_stim_zyg_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+
+```
+
+### Sl stim Zyg
+
+```{r}
+neutral_sl_stim_zyg_MALE <- nb0 + 
+  meantrial * nTrial + 
+  meanage * nAge + 
+  meanvas * nVAS + 
+  1 * nGender + 
+  meanaq * nAQ + 
+  meaneq * nEQ + 
+  meanlsas * nLSAS +
+  meanintstimcor * nInt_stim_cor + 
+  meanslstimcor * nSl_stim_cor + 
+  meanintblcor * nInt_bl_cor + 
+  meanslblcor * nSl_bl_cor + 
+  meanintstimzyg * nInt_stim_zyg + 
+  Sl_stim_Zyg_range * nSl_stim_zyg + 
+  meanintblzyg * nInt_bl_zyg + 
+  meanslblzyg * nSl_bl_zyg + 
+  meanintstimsc * nInt_stim_sc + 
+  meanslstimsc * nSl_stim_sc + 
+  meanintblsc * nInt_bl_sc + 
+  meanslblsc * nSl_bl_sc + 
+  meanintstimskt * nInt_stim_skt + 
+  meanslstimskt * nSl_stim_skt + 
+  meanintblskt * nInt_bl_skt + 
+  meanslblskt * nSl_bl_skt +
+  meanintstimdia * nInt_stim_dia + 
+  meanslstimdia * nSl_stim_dia + 
+  meanintbldia * nInt_bl_dia + 
+  meanslbldia * nSl_bl_dia
+
+neutral_sl_stim_zyg_MALE_probs <- exp(neutral_sl_stim_zyg_MALE)/
+  (1 + exp(neutral_sl_stim_zyg_MALE))
+
+neutral_sl_stim_zyg_FEMALE <- nb0 + 
+  meantrial * nTrial + 
+  meanage * nAge + 
+  meanvas * nVAS + 
+  meanaq * nAQ + 
+  meaneq * nEQ + 
+  meanlsas * nLSAS +
+  meanintstimcor * nInt_stim_cor + 
+  meanslstimcor * nSl_stim_cor + 
+  meanintblcor * nInt_bl_cor + 
+  meanslblcor * nSl_bl_cor + 
+  meanintstimzyg * nInt_stim_zyg + 
+  Sl_stim_Zyg_range * nSl_stim_zyg + 
+  meanintblzyg * nInt_bl_zyg + 
+  meanslblzyg * nSl_bl_zyg + 
+  meanintstimsc * nInt_stim_sc + 
+  meanslstimsc * nSl_stim_sc + 
+  meanintblsc * nInt_bl_sc + 
+  meanslblsc * nSl_bl_sc + 
+  meanintstimskt * nInt_stim_skt + 
+  meanslstimskt * nSl_stim_skt + 
+  meanintblskt * nInt_bl_skt + 
+  meanslblskt * nSl_bl_skt +
+  meanintstimdia * nInt_stim_dia + 
+  meanslstimdia * nSl_stim_dia + 
+  meanintbldia * nInt_bl_dia + 
+  meanslbldia * nSl_bl_dia
+
+neutral_sl_stim_zyg_FEMALE_probs <- exp(neutral_sl_stim_zyg_FEMALE)/
+  (1 + exp(neutral_sl_stim_zyg_FEMALE))
+
+plot(Sl_stim_Zyg_range, neutral_sl_stim_zyg_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_stim_Zyg", ylab="P(neutral)", main=
+       "Probability of labelling picture as neutral") 
+lines(Sl_stim_Zyg_range, neutral_sl_stim_zyg_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+```
+
+## Sad
+
+```{r}
+sb0 <- randomintercept_sad$coef[1] # intercept
+sTrial <- randomintercept_sad$coef[2]
+sAge <- randomintercept_sad$coef[3]
+sVAS <- randomintercept_sad$coef[4]
+sGender <- randomintercept_sad$coef[5]
+sAQ <- randomintercept_sad$coef[6]
+sEQ <- randomintercept_sad$coef[7]
+sLSAS <- randomintercept_sad$coef[8]
+sInt_stim_cor <- randomintercept_sad$coef[9]
+sSl_stim_cor <- randomintercept_sad$coef[10]
+sInt_bl_cor <- randomintercept_sad$coef[11]
+sSl_bl_cor <- randomintercept_sad$coef[12]
+sInt_stim_zyg <- randomintercept_sad$coef[13]
+sSl_stim_zyg <- randomintercept_sad$coef[14]
+sInt_bl_zyg <- randomintercept_sad$coef[15]
+sSl_bl_zyg <- randomintercept_sad$coef[16]
+sInt_stim_sc <- randomintercept_sad$coef[17]
+sSl_stim_sc <- randomintercept_sad$coef[18]
+sInt_bl_sc <- randomintercept_sad$coef[19]
+sSl_bl_sc <- randomintercept_sad$coef[20]
+sInt_stim_skt <- randomintercept_sad$coef[21]
+sSl_stim_skt <- randomintercept_sad$coef[22]
+sInt_bl_skt <- randomintercept_sad$coef[23]
+sSl_bl_skt <- randomintercept_sad$coef[24]
+sInt_stim_dia <- randomintercept_sad$coef[25]
+sSl_stim_dia <- randomintercept_sad$coef[26]
+sInt_bl_dia <- randomintercept_sad$coef[27]
+sSl_bl_dia <- randomintercept_sad$coef[28]
+
+VAS_range <- seq(from=min(dataf$VASValue),
+                          to=max(dataf$VASValue),
+                          length.out = 6592)
+
+Int_stim_Cor_range <- seq(from=min(dataf$Int_stim_Cor),
+                          to=max(dataf$Int_stim_Cor),
+                          length.out = 6592)
+
+Sl_stim_Cor_range <- seq(from=min(dataf$Sl_stim_Cor),
+                          to=max(dataf$Sl_stim_Cor),
+                          length.out = 6592)
+
+Sl_bl_Cor_range <- seq(from=min(dataf$Sl_bl_Cor),
+                          to=max(dataf$Sl_bl_Cor),
+                          length.out = 6592)
+
+Int_bl_Zyg_range <- seq(from=min(dataf$Int_bl_Zyg),
+                          to=max(dataf$Int_bl_Zyg),
+                          length.out = 6592)
+
+Sl_bl_Zyg_range <- seq(from=min(dataf$Sl_bl_Zyg),
+                          to=max(dataf$Sl_bl_Zyg),
+                          length.out = 6592)
+
+Sl_stim_SC_range <- seq(from=min(dataf$Sl_stim_SC),
+                          to=max(dataf$Sl_stim_SC),
+                          length.out = 6592)
+
+Sl_stim_SKT_range <- seq(from=min(dataf$Sl_stim_SKT),
+                          to=max(dataf$Sl_stim_SKT),
+                          length.out = 6592)
+
+Int_bl_SKT_range <- seq(from=min(dataf$Int_bl_SKT),
+                          to=max(dataf$Int_bl_SKT),
+                          length.out = 6592)
+
+Sl_bl_SKT_range <- seq(from=min(dataf$Sl_bl_SKT),
+                          to=max(dataf$Sl_bl_SKT),
+                          length.out = 6592)
+```
+
+### VAS
+
+```{r}
+sad_VAS_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  VAS_range * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_VAS_MALE_probs <- exp(sad_VAS_MALE)/
+  (1 + exp(sad_VAS_MALE))
+
+sad_VAS_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  VAS_range * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_VAS_FEMALE_probs <- exp(sad_VAS_FEMALE)/
+  (1 + exp(sad_VAS_FEMALE))
+
+plot(VAS_range, sad_VAS_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="VAS", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(VAS_range, sad_VAS_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Int stim Cor
+
+```{r}
+sad_int_stim_cor_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  Int_stim_Cor_range * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_int_stim_cor_MALE_probs <- exp(sad_int_stim_cor_MALE)/
+  (1 + exp(sad_int_stim_cor_MALE))
+
+sad_int_stim_cor_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  Int_stim_Cor_range * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_int_stim_cor_FEMALE_probs <- exp(sad_int_stim_cor_FEMALE)/
+  (1 + exp(sad_int_stim_cor_FEMALE))
+
+plot(Int_stim_Cor_range, sad_int_stim_cor_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_stim_Cor", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Int_stim_Cor_range, sad_int_stim_cor_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Sl stim Cor
+
+```{r}
+sad_sl_stim_cor_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  Sl_stim_Cor_range * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_stim_cor_MALE_probs <- exp(sad_sl_stim_cor_MALE)/
+  (1 + exp(sad_sl_stim_cor_MALE))
+
+sad_sl_stim_cor_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  Sl_stim_Cor_range * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_stim_cor_FEMALE_probs <- exp(sad_sl_stim_cor_FEMALE)/
+  (1 + exp(sad_sl_stim_cor_FEMALE))
+
+plot(Sl_stim_Cor_range, sad_sl_stim_cor_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_stim_Cor", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Sl_stim_Cor_range, sad_sl_stim_cor_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+```
+
+### Sl bl Cor
+
+```{r}
+sad_sl_bl_cor_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  Sl_bl_Cor_range * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_bl_cor_MALE_probs <- exp(sad_sl_bl_cor_MALE)/
+  (1 + exp(sad_sl_bl_cor_MALE))
+
+sad_sl_bl_cor_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  Sl_bl_Cor_range * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_bl_cor_FEMALE_probs <- exp(sad_sl_bl_cor_FEMALE)/
+  (1 + exp(sad_sl_bl_cor_FEMALE))
+
+plot(Sl_bl_Cor_range, sad_sl_bl_cor_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_bl_Cor", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Sl_bl_Cor_range, sad_sl_bl_cor_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Int bl Zyg
+
+```{r}
+sad_int_bl_zyg_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  Int_bl_Zyg_range * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_int_bl_zyg_MALE_probs <- exp(sad_int_bl_zyg_MALE)/
+  (1 + exp(sad_int_bl_zyg_MALE))
+
+sad_int_bl_zyg_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  Int_bl_Zyg_range * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_int_bl_zyg_FEMALE_probs <- exp(sad_int_bl_zyg_FEMALE)/
+  (1 + exp(sad_int_bl_zyg_FEMALE))
+
+plot(Int_bl_Zyg_range, sad_int_bl_zyg_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_bl_Zyg", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Int_bl_Zyg_range, sad_int_bl_zyg_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Sl bl Zyg
+
+```{r}
+sad_sl_bl_zyg_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  Sl_bl_Zyg_range * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_bl_zyg_MALE_probs <- exp(sad_sl_bl_zyg_MALE)/
+  (1 + exp(sad_sl_bl_zyg_MALE))
+
+sad_sl_bl_zyg_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  Sl_bl_Zyg_range * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_bl_zyg_FEMALE_probs <- exp(sad_sl_bl_zyg_FEMALE)/
+  (1 + exp(sad_sl_bl_zyg_FEMALE))
+
+plot(Sl_bl_Zyg_range, sad_sl_bl_zyg_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_bl_Zyg", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Sl_bl_Zyg_range, sad_sl_bl_zyg_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+
+```
+
+### Sl stim SC
+
+```{r}
+sad_sl_stim_sc_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  Sl_stim_SC_range * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_stim_sc_MALE_probs <- exp(sad_sl_stim_sc_MALE)/
+  (1 + exp(sad_sl_stim_sc_MALE))
+
+sad_sl_stim_sc_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  Sl_stim_SC_range * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_stim_sc_FEMALE_probs <- exp(sad_sl_stim_sc_FEMALE)/
+  (1 + exp(sad_sl_stim_sc_FEMALE))
+
+plot(Sl_stim_SC_range, sad_sl_stim_sc_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_stim_SC", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Sl_stim_SC_range, sad_sl_stim_sc_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Sl stim SKT
+
+```{r}
+sad_sl_stim_skt_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  Sl_stim_SKT_range * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_stim_skt_MALE_probs <- exp(sad_sl_stim_skt_MALE)/
+  (1 + exp(sad_sl_stim_skt_MALE))
+
+sad_sl_stim_skt_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  Sl_stim_SKT_range * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_stim_skt_FEMALE_probs <- exp(sad_sl_stim_skt_FEMALE)/
+  (1 + exp(sad_sl_stim_skt_FEMALE))
+
+plot(Sl_stim_SKT_range, sad_sl_stim_skt_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_stim_SKT", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Sl_stim_SKT_range, sad_sl_stim_skt_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+
+```
+
+### Int bl SKT
+
+```{r}
+sad_int_bl_skt_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  Int_bl_SKT_range * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_int_bl_skt_MALE_probs <- exp(sad_int_bl_skt_MALE)/
+  (1 + exp(sad_int_bl_skt_MALE))
+
+sad_int_bl_skt_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  Int_bl_SKT_range * sInt_bl_skt + 
+  meanslblskt * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_int_bl_skt_FEMALE_probs <- exp(sad_int_bl_skt_FEMALE)/
+  (1 + exp(sad_int_bl_skt_FEMALE))
+
+plot(Int_bl_SKT_range, sad_int_bl_skt_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Int_bl_SKT", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Int_bl_SKT_range, sad_int_bl_skt_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+### Sl bl SKT
+
+```{r}
+sad_sl_bl_skt_MALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  1 * sGender + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  Sl_bl_SKT_range * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_bl_skt_MALE_probs <- exp(sad_sl_bl_skt_MALE)/
+  (1 + exp(sad_sl_bl_skt_MALE))
+
+sad_sl_bl_skt_FEMALE <- sb0 + 
+  meantrial * sTrial + 
+  meanage * sAge + 
+  meanvas * sVAS + 
+  meanaq * sAQ + 
+  meaneq * sEQ + 
+  meanlsas * sLSAS +
+  meanintstimcor * sInt_stim_cor + 
+  meanslstimcor * sSl_stim_cor + 
+  meanintblcor * sInt_bl_cor + 
+  meanslblcor * sSl_bl_cor + 
+  meanintstimzyg * sInt_stim_zyg + 
+  meanslstimzyg * sSl_stim_zyg + 
+  meanintblzyg * sInt_bl_zyg + 
+  meanslblzyg * sSl_bl_zyg + 
+  meanintstimsc * sInt_stim_sc + 
+  meanslstimsc * sSl_stim_sc + 
+  meanintblsc * sInt_bl_sc + 
+  meanslblsc * sSl_bl_sc + 
+  meanintstimskt * sInt_stim_skt + 
+  meanslstimskt * sSl_stim_skt + 
+  meanintblskt * sInt_bl_skt + 
+  Sl_bl_SKT_range * sSl_bl_skt +
+  meanintstimdia * sInt_stim_dia + 
+  meanslstimdia * sSl_stim_dia + 
+  meanintbldia * sInt_bl_dia + 
+  meanslbldia * sSl_bl_dia
+
+sad_sl_bl_skt_FEMALE_probs <- exp(sad_sl_bl_skt_FEMALE)/
+  (1 + exp(sad_sl_bl_skt_FEMALE))
+
+plot(Sl_bl_SKT_range, sad_sl_bl_skt_MALE_probs, 
+     ylim=c(0,1),
+     type="l", 
+     lwd=3, 
+     lty=2, 
+     col="turquoise2", 
+     xlab="Sl_bl_SKT", ylab="P(sad)", main=
+       "Probability of labelling picture as sad") 
+lines(Sl_bl_SKT_range, sad_sl_bl_skt_FEMALE_probs, 
+      type="l", 
+      lwd=3, 
+      lty=3, 
+      col="pink")
+
+```
+
+
+# Train/test
+
+This is done to see whether the models would predict well. 
+
+```{r}
+
+dataf$y_angry <- as.factor(dataf$y_angry)
+dataf$y_scared <- as.factor(dataf$y_scared)
+dataf$y_happy <- as.factor(dataf$y_happy)
+dataf$y_neutral <- as.factor(dataf$y_neutral)
+dataf$y_sad <- as.factor(dataf$y_sad)
+
+sample_size <- floor(0.5 * nrow(dataf))
+
+# set the seed to make the partition is reproducible
+set.seed(2306)
+train_index <- sample(seq_len(nrow(dataf)), size = sample_size)
+
+train <- dataf[train_index, ]
+test <- dataf[-train_index, ]
+
+train_angry <- mixed_model(fixed = y_angry ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = train, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+train_scared <- mixed_model(fixed = y_scared ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = train, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+train_happy <- mixed_model(fixed = y_happy ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = train, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+train_neutral <- mixed_model(fixed = y_neutral ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = train, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0
+                                 ))
+
+train_sad <- mixed_model(fixed = y_sad ~ Trial + Age + VASValue + Gender + AQ_overall + EQ_overall + LSAS_overall + Int_stim_Cor+Sl_stim_Cor+Int_bl_Cor+Sl_bl_Cor + Int_stim_Zyg+Sl_stim_Zyg+Int_bl_Zyg+Sl_bl_Zyg +                                   Int_stim_SC+Sl_stim_SC+Int_bl_SC+Sl_bl_SC + Int_stim_SKT+Sl_stim_SKT+Int_bl_SKT+Sl_bl_SKT +  Int_stim_DIA+Sl_stim_DIA+Int_bl_DIA+Sl_bl_DIA,
+                                     random = ~1|ID, 
+                                     data = train, 
+                                     family = binomial,
+                                     control = list(
+                                       iter_EM = 0,
+                                       max_coef_value = 15
+                                 ))
+
+
+
+prob_angry <- predict(train_angry)
+prob_scared <- predict(train_scared)
+prob_happy <- predict(train_happy)
+prob_neutral <- predict(train_neutral)
+prob_sad <- predict(train_sad)
+
+predicted.angry <- ifelse(prob_angry > 0.5, '1', '0')
+predicted.scared <- ifelse(prob_scared > 0.5, '1', '0')
+predicted.happy <- ifelse(prob_happy > 0.5, '1', '0')
+predicted.neutral <- ifelse(prob_neutral > 0.5, '1', '0')
+predicted.sad <- ifelse(prob_sad > 0.5, '1', '0')
+
+mean(test$y_angry == predicted.angry)
+mean(test$y_scared == predicted.scared)
+mean(test$y_happy == predicted.happy)
+mean(test$y_neutral == predicted.neutral)
+mean(test$y_sad == predicted.sad)
+
+```
