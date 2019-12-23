@@ -6,4 +6,5 @@ The Initial_DataAnalysis.Rmd file consists of some initial data analyis steps. T
 If anything is unclear, please contact us. 
 
 Britt Broere: britt_broere@outlook.com
+
 Mariska van Willigen: mariska.w@live.nl
